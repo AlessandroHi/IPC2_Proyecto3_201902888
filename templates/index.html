@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Modal -->
+<div class="modal fade" id="modalCargarArchivo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-content">
+      <div class="modal-header">
+      <h5 class="modal-title" id="exampleModalLabel">Cargar archivo</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <input type="file" class="form-control-file" id="archivo"/>
+      </div>
+      <div class="modal-footer">
+      <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="cargarTextArea()">Guardar</button>
+      </div>
+  </div>
+  </div>
+</div>
+<!--Fin Modal-->
+
+<!--Columnas-->
+
+<br><div class="container">
+  <div class="row justify-content-between">
+      <div class="col">
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="enviar()">Enviar</button>
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#modalCargarArchivo">Cargar</button>
+          <p>Entrada</p>
+          <textarea class="form-control" id="textAreaEntrada" rows="20"></textarea>
+      </div>
+      <div class="col">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="limpiarTextAreas()">Reset</button>
+          <button type="button" class="btn btn-success" onclick="cargarTextAreaSalida()">Consular Datos</button>
+          <p>Salida</p>
+          <textarea class="form-control" id="textAreaSalida" rows="20"></textarea>   
+      </div>
+  </div>
+</div>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+
+  function cargarTextArea() {
+      const input = document.getElementById('archivo');
+      console.log(input)
+      if(input.files && input.files[0]) {
+          console.log('File seleccionado : ', input.files[0]);
+          let textAreaIn = document.querySelector('#textAreaEntrada');
+          var archivo = input.files[0];
+          var lectura = new FileReader();
+          lectura.addEventListener('load', (e) => {
+              textAreaIn.value = e.target.result
+          });
+
+          lectura.readAsText(archivo)
+      }
+      console.log('Sin archivo seleccionado ' + document.getElementById('archivo').files[0]);
+  }
+
+  function cargarTextAreaSalida() {
+      var req = new XMLHttpRequest();
+      req.open('GET', 'http://localhost:5000/consultar', true);
+      req.onreadystatechange = function (aEvt) {
+          if (req.readyState == 4) {
+              if (req.status == 200) {
+                  console.log(req.responseText);
+                  let textAreaSalida_ = document.querySelector('#textAreaSalida');
+                  textAreaSalida_.value = req.responseText
+              }
+                  else {
+                  console.log("Error loading page\n");
+                  }
+          }
+      };
+      req.send(null)
+
+  }
+
+  function reqListener() {
+      console.log(this.responseText);
+      alert(this.responseText)
+  }
+
+  function limpiarTextAreas() {
+      let textAreaEntrada_ = document.querySelector('#textAreaEntrada');
+      textAreaEntrada_.value = '';
+      
+      var oReq= new XMLHttpRequest();
+      oReq.addEventListener('load', reqListener);
+      oReq.open('GET', 'http://localhost:5000/reset');
+      oReq.send();
+
+  }
+
+ 
+
+  function enviar() {
+      if(document.querySelector('#archivo').files.length > 0) {
+          let archivo = document.querySelector('#archivo').files[0];
+          var request = new XMLHttpRequest();
+          const data = new FormData();
+
+          request.open('POST', 'http://localhost:5000/add', true);
+          request.onreadystatechange = () => {
+              if (request.status == 200 && request.readyState == 4) {
+                  alert(request.responseText);
+              }
+          };
+          data.append('archivo', archivo);
+          request.send(data)
+      }
+      else {
+          alert('Debe cargar un archivo antes')
+      }
+  }
+</script>
+
+{% endblock content %}
